@@ -1,19 +1,30 @@
-import mongoose from 'mongooose'
+import dbConnect from './dbConnectOld'
+import User from './models/User'
 
-const connection = {};
+export default async function handler (req, res) {
+  const { method } = req
 
-async function dbConnect() {
-    if (connection.isConnected) {
-      return;
-    }
+  await dbConnect()
 
-    const db = await mongoose.createConnection(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    });
-
-    connection.isConnected = db.connection[0].readyState;
-    console.log(connection.isConnected);
+  switch (method) {
+    case 'GET':
+      try {
+        const users = await User.find({})
+        res.status(200).json({ success: true, data: users })
+      } catch (error) {
+        res.status(400).json({ success: false })
+      }
+      break
+    case 'POST':
+      try {
+        const user = await User.create(req.body)
+        res.status(201).json({ success: true, data: user })
+      } catch (error) {
+        res.status(400).json({ success: false })
+      }
+      break
+    default:
+      res.status(400).json({ success: false })
+      break
+  }
 }
-
-export default dbConnect;
